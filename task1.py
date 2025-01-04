@@ -1,3 +1,4 @@
+import heapq
 from typing import List, Dict
 from dataclasses import dataclass
 
@@ -14,22 +15,46 @@ class PrinterConstraints:
     max_items: int
 
 def optimize_printing(print_jobs: List[Dict], constraints: Dict) -> Dict:
-    """
-    Оптимізує чергу 3D-друку згідно з пріоритетами та обмеженнями принтера
+    jobs = [PrintJob(**job) for job in print_jobs]
+    constraints = PrinterConstraints(**constraints)
 
-    Args:
-        print_jobs: Список завдань на друк
-        constraints: Обмеження принтера
+    jobs.sort(key=lambda job: (job.priority, job.id))
 
-    Returns:
-        Dict з порядком друку та загальним часом
-    """
-    # Тут повинен бути ваш код
+    print_order = []
+    total_time = 0
+
+    while jobs:
+        current_volume = 0
+        current_items = 0
+        batch = []
+
+        remaining_jobs = []
+
+        # Формуємо чергу для друку
+        for job in jobs:
+            if (current_items < constraints.max_items
+                    and current_volume + job.volume <= constraints.max_volume):
+                batch.append(job)
+                current_volume += job.volume
+                current_items += 1
+            else:
+                remaining_jobs.append(job)
+
+        # Розрахунок часу друку для черги
+        if batch:
+            max_batch_time = max(job.print_time for job in batch)
+            total_time += max_batch_time
+            print_order.extend(job.id for job in batch)
+
+        # Оновлення списку робіт
+        jobs = remaining_jobs
 
     return {
-        "print_order": None,
-        "total_time": None
+        "print_order": print_order,
+        "total_time": total_time
     }
+
+
 
 # Тестування
 def test_printing_optimization():
@@ -64,12 +89,12 @@ def test_printing_optimization():
     print(f"Порядок друку: {result1['print_order']}")
     print(f"Загальний час: {result1['total_time']} хвилин")
 
-    print("\\nТест 2 (різні пріоритети):")
+    print("\nТест 2 (різні пріоритети):")
     result2 = optimize_printing(test2_jobs, constraints)
     print(f"Порядок друку: {result2['print_order']}")
     print(f"Загальний час: {result2['total_time']} хвилин")
 
-    print("\\nТест 3 (перевищення обмежень):")
+    print("\nТест 3 (перевищення обмежень):")
     result3 = optimize_printing(test3_jobs, constraints)
     print(f"Порядок друку: {result3['print_order']}")
     print(f"Загальний час: {result3['total_time']} хвилин")
