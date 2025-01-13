@@ -13,12 +13,33 @@ def rod_cutting_memo(length: int, prices: List[int]) -> Dict:
         Dict з максимальним прибутком та списком розрізів
     """
 
-    # Тут повинен бути ваш код
+    memo = {}
 
+    def helper(n: int):
+        if n == 0:
+            return 0, []
+        if n in memo:
+            return memo[n]
+
+        max_profit = 0
+        cuts = []
+
+        for i in range(1, n + 1):
+            if i <= len(prices):
+                current_profit, current_cuts = helper(n - i)
+                current_profit += prices[i - 1]
+                if current_profit > max_profit:
+                    max_profit = current_profit
+                    cuts = current_cuts + [i]
+
+        memo[n] = (max_profit, cuts)
+        return memo[n]
+
+    max_profit, cuts = helper(length)
     return {
-        "max_profit": None,
-        "cuts": None,
-        "number_of_cuts": None
+        "max_profit": max_profit,
+        "cuts": cuts,
+        "number_of_cuts": len(cuts) - 1,
     }
 
 
@@ -34,12 +55,19 @@ def rod_cutting_table(length: int, prices: List[int]) -> Dict:
         Dict з максимальним прибутком та списком розрізів
     """
 
-    # Тут повинен бути ваш код
+    dp = [0] * (length + 1)
+    cut_records = [[] for _ in range(length + 1)]
+
+    for n in range(1, length + 1):
+        for i in range(1, n + 1):
+            if i <= len(prices) and dp[n] < dp[n - i] + prices[i - 1]:
+                dp[n] = dp[n - i] + prices[i - 1]
+                cut_records[n] = cut_records[n - i] + [i]
 
     return {
-        "max_profit": None,
-        "cuts": None,
-        "number_of_cuts": None
+        "max_profit": dp[length],
+        "cuts": cut_records[length],
+        "number_of_cuts": len(cut_records[length]) - 1,
     }
 
 
